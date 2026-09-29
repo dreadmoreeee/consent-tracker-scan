@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Maple Lane Bakery (demo)</title>
+  <link rel="stylesheet" href="/style.css">
+  <!-- Loaded straight away, before the visitor answers the banner. -->
+  <script src="{{TRACKER}}/demo-analytics.js" async></script>
+  <script src="{{WIDGET}}/widget.js" async></script>
+</head>
+<body>
+  <h1>Maple Lane Bakery</h1>
+  <p>Fresh bread in Miramichi. This is a demo page for consent-tracker-scan.</p>
+  <nav>
+    <a href="/about.html">About us</a>
+    <a href="/private/orders.html">My orders</a>
+  </nav>
+
+  <div id="CybotCookiebotDialog" role="dialog" aria-label="Cookie consent">
+    <p>We use cookies to understand how you use our site.</p>
+    <button type="button" onclick="acceptAll()">Allow all</button>
+    <button type="button">Use necessary cookies only</button>
+  </div>
+
+  <script>
+    document.cookie = "theme=light; path=/; max-age=31536000; SameSite=Lax";
+    localStorage.setItem("cart", "[]");
+    sessionStorage.setItem("visit_started", String(Date.now()));
+    function acceptAll() {
+      document.cookie = "CookieConsent=all; path=/; max-age=31536000";
+      fetch("/consent-accepted");
+    }
+  </script>
+</body>
+</html>

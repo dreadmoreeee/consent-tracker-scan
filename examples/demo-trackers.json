@@ -1,0 +1,12 @@
+{
+  "trackers": [
+    {
+      "name": "Demo Analytics",
+      "category": "analytics",
+      "domains": ["localhost"],
+      "cookies": ["_da_*"],
+      "storage": ["_da_*"],
+      "source": "examples/demo_thirdparty/demo-analytics.js (fake tracker used by the demo)"
+    }
+  ]
+}

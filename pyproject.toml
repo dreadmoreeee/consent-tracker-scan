@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "consent-tracker-scan"
+version = "0.1.0"
+description = "See which cookies, storage keys and third-party trackers a website sets before the visitor consents."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Marvin Palencia" }]
+requires-python = ">=3.10"
+dependencies = ["playwright>=1.40"]
+keywords = ["cookies", "consent", "privacy", "law 25", "pipeda", "playwright", "tracker"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP :: Site Management",
+    "Topic :: Security",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://marvin.demarkstudio.ca"
+
+[project.scripts]
+consent-tracker-scan = "consent_tracker_scan.cli:main"
+
+[tool.setuptools]
+packages = ["consent_tracker_scan"]
+
+[tool.setuptools.package-data]
+consent_tracker_scan = ["data/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

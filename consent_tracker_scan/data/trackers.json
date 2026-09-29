@@ -1,0 +1,223 @@
+{
+  "about": "Tracker list for consent-tracker-scan. Each entry maps request host names (the domain and all its subdomains), cookie names and web storage keys (shell-style wildcards, case-sensitive) to a vendor and category. 'source' is the vendor documentation that describes the domains or cookies. Compiled by hand from those pages; vendors change them, so treat this as a starting point and send corrections.",
+  "categories": {
+    "analytics": "Measures visits and behaviour; usually sets identifiers.",
+    "advertising": "Ad serving, conversion tracking and retargeting.",
+    "social_pixel": "Social network pixels and plugins that report visits back to the network.",
+    "session_replay": "Records clicks, scrolls and page changes to replay sessions.",
+    "tag_manager": "Loads other tags; not a tracker by itself but usually the first to fire.",
+    "embed": "Embedded third-party content (video players) that can set cookies.",
+    "cdn_fonts": "Public CDNs and web fonts; the visitor's IP address reaches the provider (low).",
+    "consent": "Consent management platforms (the cookie banner itself)."
+  },
+  "trackers": [
+    {
+      "name": "Google Analytics",
+      "category": "analytics",
+      "domains": ["google-analytics.com", "analytics.google.com"],
+      "cookies": ["_ga", "_ga_*", "_gid", "_gat", "_gat_*", "__utma", "__utmb", "__utmc", "__utmt", "__utmz"],
+      "storage": [],
+      "source": "https://developers.google.com/tag-platform/security/concepts/cookies"
+    },
+    {
+      "name": "Google Tag Manager",
+      "category": "tag_manager",
+      "domains": ["googletagmanager.com"],
+      "cookies": [],
+      "storage": [],
+      "source": "https://developers.google.com/tag-platform/security/guides/csp"
+    },
+    {
+      "name": "Google Ads / DoubleClick",
+      "category": "advertising",
+      "domains": ["doubleclick.net", "googleadservices.com", "googlesyndication.com", "adservice.google.com"],
+      "cookies": ["_gcl_*", "IDE", "DSID", "test_cookie"],
+      "storage": [],
+      "source": "https://business.safety.google/adscookies/"
+    },
+    {
+      "name": "Meta Pixel",
+      "category": "social_pixel",
+      "domains": ["connect.facebook.net", "facebook.com", "facebook.net"],
+      "cookies": ["_fbp", "_fbc"],
+      "storage": [],
+      "source": "https://developers.facebook.com/docs/meta-pixel/"
+    },
+    {
+      "name": "TikTok Pixel",
+      "category": "social_pixel",
+      "domains": ["analytics.tiktok.com", "analytics-sg.tiktok.com"],
+      "cookies": ["_ttp", "_tt_enable_cookie", "ttcsid", "ttcsid_*"],
+      "storage": ["tt_appInfo", "tt_sessionId", "tt_pixel_session_index"],
+      "source": "https://ads.tiktok.com/help/article/tiktok-pixel"
+    },
+    {
+      "name": "LinkedIn Insight Tag",
+      "category": "social_pixel",
+      "domains": ["snap.licdn.com", "px.ads.linkedin.com", "dc.ads.linkedin.com"],
+      "cookies": ["li_fat_id"],
+      "storage": [],
+      "source": "https://www.linkedin.com/help/lms/answer/a418880"
+    },
+    {
+      "name": "Twitter / X Pixel",
+      "category": "social_pixel",
+      "domains": ["ads-twitter.com", "analytics.twitter.com", "t.co"],
+      "cookies": ["_twclid", "muc_ads"],
+      "storage": [],
+      "source": "https://business.x.com/en/help/campaign-measurement-and-analytics/conversion-tracking-for-websites"
+    },
+    {
+      "name": "Pinterest Tag",
+      "category": "social_pixel",
+      "domains": ["ct.pinterest.com", "s.pinimg.com"],
+      "cookies": ["_pin_unauth", "_pinterest_ct_ua", "_pinterest_ct_rt", "_epik", "_derived_epik"],
+      "storage": [],
+      "source": "https://help.pinterest.com/en/business/article/track-conversions-with-pinterest-tag"
+    },
+    {
+      "name": "Snap Pixel",
+      "category": "social_pixel",
+      "domains": ["sc-static.net", "tr.snapchat.com", "tr-shadow.snapchat.com"],
+      "cookies": ["_scid", "_scid_r", "_sctr"],
+      "storage": [],
+      "source": "https://businesshelp.snapchat.com/s/article/pixel-website-install"
+    },
+    {
+      "name": "Microsoft Advertising UET (Bing)",
+      "category": "advertising",
+      "domains": ["bat.bing.com", "bat.bing.net"],
+      "cookies": ["_uetsid", "_uetvid", "_uetmsclkid"],
+      "storage": ["_uetsid", "_uetsid_exp", "_uetvid", "_uetvid_exp"],
+      "source": "https://learn.microsoft.com/en-us/advertising/guides/universal-event-tracking"
+    },
+    {
+      "name": "Hotjar",
+      "category": "session_replay",
+      "domains": ["hotjar.com", "hotjar.io"],
+      "cookies": ["_hj*"],
+      "storage": ["_hj*"],
+      "source": "https://help.hotjar.com/hc/en-us/articles/115011789248-Hotjar-Cookie-Information"
+    },
+    {
+      "name": "Microsoft Clarity",
+      "category": "session_replay",
+      "domains": ["clarity.ms"],
+      "cookies": ["_clck", "_clsk", "CLID"],
+      "storage": [],
+      "source": "https://learn.microsoft.com/en-us/clarity/setup-and-installation/cookie-list"
+    },
+    {
+      "name": "FullStory",
+      "category": "session_replay",
+      "domains": ["fullstory.com"],
+      "cookies": ["fs_uid", "fs_lua"],
+      "storage": [],
+      "source": "https://developer.fullstory.com/browser/getting-started/"
+    },
+    {
+      "name": "Segment",
+      "category": "analytics",
+      "domains": ["segment.com", "segment.io"],
+      "cookies": ["ajs_anonymous_id", "ajs_user_id", "ajs_group_id"],
+      "storage": ["ajs_*"],
+      "source": "https://segment.com/docs/connections/sources/catalog/libraries/website/javascript/"
+    },
+    {
+      "name": "Mixpanel",
+      "category": "analytics",
+      "domains": ["mixpanel.com", "mxpnl.com"],
+      "cookies": ["mp_*_mixpanel"],
+      "storage": ["mp_*_mixpanel"],
+      "source": "https://docs.mixpanel.com/docs/tracking-methods/sdks/javascript"
+    },
+    {
+      "name": "YouTube embed",
+      "category": "embed",
+      "domains": ["youtube.com", "youtube-nocookie.com", "ytimg.com", "googlevideo.com", "youtu.be"],
+      "cookies": ["YSC", "VISITOR_INFO1_LIVE", "VISITOR_PRIVACY_METADATA"],
+      "storage": [],
+      "source": "https://support.google.com/youtube/answer/171780"
+    },
+    {
+      "name": "Vimeo embed",
+      "category": "embed",
+      "domains": ["vimeo.com", "vimeocdn.com"],
+      "cookies": ["vuid"],
+      "storage": [],
+      "source": "https://vimeo.com/cookie_policy"
+    },
+    {
+      "name": "Google Fonts",
+      "category": "cdn_fonts",
+      "domains": ["fonts.googleapis.com", "fonts.gstatic.com"],
+      "cookies": [],
+      "storage": [],
+      "source": "https://developers.google.com/fonts/faq/privacy"
+    },
+    {
+      "name": "Adobe Fonts",
+      "category": "cdn_fonts",
+      "domains": ["use.typekit.net", "p.typekit.net"],
+      "cookies": [],
+      "storage": [],
+      "source": "https://helpx.adobe.com/fonts/using/privacy.html"
+    },
+    {
+      "name": "Public JavaScript CDN",
+      "category": "cdn_fonts",
+      "domains": ["cdnjs.cloudflare.com", "cdn.jsdelivr.net", "unpkg.com", "ajax.googleapis.com", "code.jquery.com", "stackpath.bootstrapcdn.com", "maxcdn.bootstrapcdn.com", "use.fontawesome.com", "kit.fontawesome.com", "ka-f.fontawesome.com"],
+      "cookies": [],
+      "storage": [],
+      "source": "Vendor home pages (cdnjs.com, jsdelivr.com, unpkg.com, developers.google.com/speed/libraries, code.jquery.com, fontawesome.com)"
+    },
+    {
+      "name": "OneTrust (CMP)",
+      "category": "consent",
+      "domains": ["cookielaw.org", "onetrust.com"],
+      "cookies": ["OptanonConsent", "OptanonAlertBoxClosed"],
+      "storage": [],
+      "source": "https://developer.onetrust.com/onetrust/docs"
+    },
+    {
+      "name": "Cookiebot (CMP)",
+      "category": "consent",
+      "domains": ["cookiebot.com"],
+      "cookies": ["CookieConsent"],
+      "storage": [],
+      "source": "https://www.cookiebot.com/en/developer/"
+    },
+    {
+      "name": "CookieYes (CMP)",
+      "category": "consent",
+      "domains": ["cdn-cookieyes.com", "cookieyes.com"],
+      "cookies": ["cookieyes-consent"],
+      "storage": [],
+      "source": "https://www.cookieyes.com/documentation/"
+    },
+    {
+      "name": "Complianz (CMP)",
+      "category": "consent",
+      "domains": [],
+      "cookies": ["cmplz_*"],
+      "storage": [],
+      "source": "https://complianz.io/cookies/"
+    },
+    {
+      "name": "Osano (CMP)",
+      "category": "consent",
+      "domains": ["osano.com"],
+      "cookies": ["osano_consentmanager", "osano_consentmanager_uuid"],
+      "storage": [],
+      "source": "https://docs.osano.com/"
+    },
+    {
+      "name": "Quantcast Choice (CMP)",
+      "category": "consent",
+      "domains": ["cmp.quantcast.com", "quantcast.mgr.consensu.org"],
+      "cookies": ["euconsent-v2", "addtl_consent"],
+      "storage": [],
+      "source": "https://help.quantcast.com/hc/en-us/categories/360002940873-Quantcast-Choice"
+    }
+  ]
+}
