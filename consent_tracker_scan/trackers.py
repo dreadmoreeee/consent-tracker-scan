@@ -19,6 +19,7 @@ CATEGORIES = (
     "tag_manager",
     "embed",
     "cdn_fonts",
+    "cookieless_analytics",
     "consent",
 )
 

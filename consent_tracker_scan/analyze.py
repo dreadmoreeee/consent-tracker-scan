@@ -26,6 +26,7 @@ REQUEST_SEVERITY = {
     "tag_manager": "medium",
     "embed": "medium",
     "cdn_fonts": "low",
+    "cookieless_analytics": "low",
     "consent": "info",
     "unknown": "medium",
 }
@@ -38,7 +39,7 @@ def _cookie_or_storage_severity(tracker: Tracker | None, third_party: bool) -> s
         return "medium" if third_party else "info"
     if tracker.category == "consent":
         return "info"
-    if tracker.category == "cdn_fonts":
+    if tracker.category in ("cdn_fonts", "cookieless_analytics"):
         return "low"
     return "high"
 

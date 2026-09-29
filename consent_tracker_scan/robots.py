@@ -1,13 +1,13 @@
-"""robots.txt handling on top of urllib.robotparser, with a fetch timeout."""
+"""robots.txt handling (RFC 9309 matching, see rfc9309.py) with a fetch timeout."""
 
 from __future__ import annotations
 
 import urllib.error
 import urllib.request
 from urllib.parse import urlsplit, urlunsplit
-from urllib.robotparser import RobotFileParser
 
 from . import __version__
+from .rfc9309 import RobotsTxt
 
 USER_AGENT = "consent-tracker-scan"
 USER_AGENT_HEADER = f"{USER_AGENT}/{__version__} (+https://marvin.demarkstudio.ca)"
@@ -16,7 +16,7 @@ USER_AGENT_HEADER = f"{USER_AGENT}/{__version__} (+https://marvin.demarkstudio.c
 class RobotsPolicy:
     """Answers "may this URL be fetched?" for one origin."""
 
-    def __init__(self, parser: RobotFileParser | None, note: str = "") -> None:
+    def __init__(self, parser: RobotsTxt | None, note: str = "") -> None:
         self._parser = parser
         self.note = note
 
@@ -26,9 +26,7 @@ class RobotsPolicy:
 
     @classmethod
     def from_text(cls, text: str, note: str = "") -> "RobotsPolicy":
-        parser = RobotFileParser()
-        parser.parse(text.splitlines())
-        return cls(parser, note)
+        return cls(RobotsTxt(text), note)
 
     @classmethod
     def disallow_all(cls, note: str = "") -> "RobotsPolicy":
@@ -54,7 +52,7 @@ def robots_url(url: str) -> str:
 def fetch_robots(url: str, timeout: float = 10.0) -> RobotsPolicy:
     """Fetch and parse robots.txt for the origin of ``url``.
 
-    Follows the same rules as ``RobotFileParser.read``: 401/403 mean
+    Status handling follows ``RobotFileParser.read``: 401/403 mean
     "disallow everything", other 4xx mean "allow everything". Server errors
     and network failures are treated as "allow" and noted in the report.
     """

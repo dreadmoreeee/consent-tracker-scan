@@ -13,7 +13,7 @@ The site is loaded in headless Chromium (Playwright) as a first-time visitor wit
 - **every third-party request**, meaning any host outside the site's registrable domain. Each one is classified with a bundled tracker list: analytics, advertising, social pixel, session replay, tag manager, embed, CDN/fonts, consent platform or **unknown**;
 - **the consent banner**, if there is one, and which CMP it is: OneTrust, Cookiebot, CookieYes, Complianz, Osano, Quantcast Choice, Usercentrics, Didomi, TrustArc, or a generic cookie banner. It is detected from script URLs and DOM selectors.
 
-Each finding gets a severity. **High**: analytics, advertising, social pixel or session replay firing before consent, or a cookie or storage key written by one of them. **Medium**: tag managers, video embeds, unknown third parties and unknown third-party cookies. **Low**: fonts and public CDNs. **Info**: other first-party cookies and consent-platform cookies. Plain-English notes relate the results to Quebec Law 25 and PIPEDA. They are general information, **not legal advice**.
+Each finding gets a severity. **High**: analytics, advertising, social pixel or session replay firing before consent, or a cookie or storage key written by one of them. **Medium**: tag managers, video embeds, unknown third parties and unknown third-party cookies. **Low**: fonts, public CDNs and cookieless analytics (Cloudflare Web Analytics, Plausible, Fathom, Simple Analytics). **Info**: other first-party cookies and consent-platform cookies. Plain-English notes relate the results to Quebec Law 25 and PIPEDA. They are general information, **not legal advice**.
 
 Why: many small-business sites in Canada have a cookie banner, but Google Analytics, the Meta pixel or Hotjar still fire before anyone clicks it. This tool shows exactly what fired, in a report you can hand to a developer.
 
@@ -34,7 +34,7 @@ python -m consent_tracker_scan URL [--pages N] [--delay SECONDS] [--timeout SECO
                                [--extra-trackers FILE] [--quiet]
 ```
 
-- `--pages N` crawls up to N same-origin pages (1-20, default 1), breadth-first from the start URL. The scanner reads robots.txt with `urllib.robotparser` and never loads a disallowed URL. Pages are fetched one at a time.
+- `--pages N` crawls up to N same-origin pages (1-20, default 1), breadth-first from the start URL. The scanner reads robots.txt the way Google does (RFC 9309: the most specific rule wins, with `*` and `$` wildcards) and never loads a disallowed URL. Pages are fetched one at a time.
 - `--delay` sets the pause between pages (default 1 s). If robots.txt sets a larger `Crawl-delay`, that value is used instead.
 - `--timeout` is the page load timeout (default 30 s). `--wait-ms` is the extra time to wait after the load event, so late tags can fire (default 3000).
 - `--json` and `--md` write the reports. Without either option, the Markdown report goes to stdout.
@@ -97,7 +97,7 @@ The tracker asked for a 2-year cookie, and the report shows the 400-day expiry C
 
 ```
 $ python -m pytest -q -p no:cacheprovider --import-mode=importlib consent-tracker-scan
-97 passed in 29.96s
+110 passed in 28.56s
 ```
 
 The tests use no internet. Local `http.server` fixtures on random ports serve a first-party site, which sets cookies by header and by JavaScript and writes storage. A fake tracker is served from a second origin (`localhost` vs `127.0.0.1`). Other fixtures serve OneTrust-like, Cookiebot-like and generic banners with click traps that prove nothing is clicked, robots.txt rules and link farms for `--pages`. Browser tests skip with the reason if Chromium cannot start.
