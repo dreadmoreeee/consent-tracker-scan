@@ -71,7 +71,9 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as err:
         print(f"error: cannot load extra trackers: {err}", file=sys.stderr)
         return 2
-    progress = None if args.quiet else (lambda u: print(f"scanning {u}", file=sys.stderr))
+    # the crawler reports bare URLs; other steps send a full sentence
+    progress = None if args.quiet else (
+        lambda m: print(m if " " in m else f"scanning {m}", file=sys.stderr))
     try:
         report = scan_site(
             args.url,
