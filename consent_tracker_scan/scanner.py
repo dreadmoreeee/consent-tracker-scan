@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Callable
 from urllib.parse import urlsplit
 
-from .analyze import analyze
+from .analyze import analyze, analyze_reject
 from .browser import BrowserSession
 from .crawl import MAX_PAGES, crawl
 from .robots import fetch_robots
@@ -21,11 +21,14 @@ def scan_site(
     wait_ms: int = 3000,
     trackers: TrackerDB | None = None,
     progress: Callable[[str], None] | None = None,
+    reject: bool = False,
 ) -> dict:
     """Scan ``url`` (and up to ``pages`` same-origin pages) before consent.
 
     Raises ``ValueError`` for a bad URL and ``browser.BrowserUnavailable``
-    when Chromium cannot start.
+    when Chromium cannot start. With ``reject=True`` the start page is loaded
+    once more, the banner's reject button is clicked, and the page is reloaded
+    to see whether trackers still fire (``report["after_reject"]``).
     """
     parts = urlsplit(url)
     if parts.scheme not in ("http", "https") or not parts.hostname:
@@ -38,6 +41,11 @@ def scan_site(
         observations, skipped = crawl(
             url, session.scan, robots, max_pages=pages, delay=delay, progress=progress
         )
+        reject_raw = None
+        if reject and observations:
+            if progress:
+                progress(f"rejecting consent on {url}")
+            reject_raw = session.reject(url)
         browser_version = session.version
     options = {
         "pages": pages,
@@ -47,6 +55,9 @@ def scan_site(
         "robots": robots.note,
         "browser": f"Chromium {browser_version} (headless, fresh profile per page)",
     }
-    return analyze(
+    report = analyze(
         url, observations, trackers, skipped_by_robots=skipped, options=options, now=started
     )
+    if reject_raw is not None:
+        report["after_reject"] = analyze_reject(reject_raw, url, trackers)
+    return report

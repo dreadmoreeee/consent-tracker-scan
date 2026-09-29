@@ -1,7 +1,8 @@
 """Command line interface.
 
 Exit codes: 0 no high-severity findings, 1 at least one high-severity
-finding, 2 usage error or nothing could be scanned (bad URL, browser
+finding or (with --reject) trackers still firing after reject,
+2 usage error or nothing could be scanned (bad URL, browser
 missing, start page blocked by robots.txt or unreachable).
 """
 
@@ -54,6 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--delay", type=_non_negative, default=1.0, help="seconds between pages (default 1; robots.txt Crawl-delay wins if larger)")
     p.add_argument("--timeout", type=_non_negative, default=30.0, help="page load timeout in seconds (default 30)")
     p.add_argument("--wait-ms", type=int, default=3000, help="extra wait after the load event, in ms (default 3000)")
+    p.add_argument("--reject", action="store_true", help="also click the banner's reject button on the start page, reload, and check that trackers stop (clicks nothing else)")
     p.add_argument("--json", metavar="FILE", help="write the JSON report here")
     p.add_argument("--md", metavar="FILE", help="write the Markdown report here")
     p.add_argument("--extra-trackers", metavar="FILE", help="JSON file with more tracker entries (same format as the bundled list)")
@@ -79,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
             wait_ms=max(0, args.wait_ms),
             trackers=trackers,
             progress=progress,
+            reject=args.reject,
         )
     except ValueError as err:
         print(f"error: {err}", file=sys.stderr)

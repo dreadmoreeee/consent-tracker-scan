@@ -133,3 +133,45 @@ def detect_cmp(
             "also_seen": [],
         }
     return {"detected": False, "cmp": None, "evidence": [], "also_seen": []}
+
+
+# --- reject mode ---------------------------------------------------------------
+# CMP-specific "reject all" buttons, then a text match. Only an element whose own
+# text clearly means "refuse" is ever clicked; nothing else on the page is touched.
+REJECT_SELECTORS: tuple[str, ...] = (
+    "#onetrust-reject-all-handler",
+    "#CybotCookiebotDialogBodyButtonDecline",
+    ".cky-btn-reject",
+    ".cmplz-deny",
+    ".osano-cm-denyAll",
+    "#didomi-notice-disagree-button",
+    "[data-testid='uc-deny-all-button']",
+    ".qc-cmp2-summary-buttons button[mode='secondary']",
+    "#truste-consent-required",
+)
+
+FIND_REJECT_JS = r"""
+(selectors) => {
+  const visible = (el) => {
+    const s = window.getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    return s.display !== 'none' && s.visibility !== 'hidden' && r.width > 0 && r.height > 0;
+  };
+  const mark = (el, how) => {
+    el.setAttribute('data-cts-reject', '1');
+    return {found: true, how: how, text: (el.innerText || el.value || el.getAttribute('aria-label') || '').trim().slice(0, 60)};
+  };
+  for (const sel of selectors) {
+    let el = null;
+    try { el = document.querySelector(sel); } catch (e) {}
+    if (el && visible(el)) return mark(el, 'selector ' + sel);
+  }
+  const re = /^\s*(reject all|reject|decline all|decline|refuse all|refuse|deny all|deny|only necessary|only essential|necessary only|essential only|tout refuser|refuser|continuer sans accepter|rechazar todo|rechazar|no acepto)\s*[.!]?\s*$/i;
+  const els = document.querySelectorAll('button,a,input[type=button],input[type=submit],[role=button]');
+  for (const el of els) {
+    const t = (el.innerText || el.value || el.getAttribute('aria-label') || '').trim();
+    if (t && re.test(t) && visible(el)) return mark(el, 'text');
+  }
+  return {found: false};
+}
+"""

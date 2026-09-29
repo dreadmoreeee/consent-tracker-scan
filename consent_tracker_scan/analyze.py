@@ -365,7 +365,47 @@ def build_notes(report: dict) -> list[str]:
 
 
 def exit_code(report: dict) -> int:
-    """0 = no high findings, 1 = high findings, 2 = nothing could be scanned."""
+    """0 = no high findings, 1 = high findings (or trackers after reject), 2 = nothing scanned."""
     if report["summary"]["pages_scanned"] == 0:
         return 2
+    if (report.get("after_reject") or {}).get("verdict") == "fail":
+        return 1
     return 1 if report["summary"]["high"] else 0
+
+
+def analyze_reject(result: dict, site_url: str, trackers: TrackerDB) -> dict:
+    """Judge what happened after clicking the banner's reject button.
+
+    ``verdict``: ``ok`` (no tracking request or new tracking cookie after reject),
+    ``fail`` (tracking still happens), ``no_button`` (no reject button found) or
+    ``error``.
+    """
+
+    site = host_of(site_url)
+    out = {"clicked": result.get("clicked"), "error": result.get("error"),
+           "tracking_requests": [], "new_tracking_cookies": [], "verdict": ""}
+    if result.get("error"):
+        out["verdict"] = "error"
+        return out
+    if not result.get("clicked"):
+        out["verdict"] = "no_button"
+        return out
+    seen: dict[str, dict] = {}
+    for r in result.get("requests", []):
+        host = host_of(r["url"])
+        if not host or not is_third_party(host, site):
+            continue
+        t = trackers.match_host(host)
+        if t and t.category in TRACKING_CATEGORIES:
+            e = seen.setdefault(host, {"host": host, "tracker": t.name, "category": t.category, "requests": 0})
+            e["requests"] += 1
+    out["tracking_requests"] = sorted(seen.values(), key=lambda e: e["host"])
+    before = {(c["name"], c["domain"]) for c in result.get("cookies_before", [])}
+    for c in result.get("cookies_after", []):
+        if (c["name"], c["domain"]) in before:
+            continue
+        t = trackers.match_cookie(c["name"], c["domain"])
+        if t and t.category in TRACKING_CATEGORIES:
+            out["new_tracking_cookies"].append({"name": c["name"], "domain": c["domain"], "tracker": t.name})
+    out["verdict"] = "fail" if out["tracking_requests"] or out["new_tracking_cookies"] else "ok"
+    return out

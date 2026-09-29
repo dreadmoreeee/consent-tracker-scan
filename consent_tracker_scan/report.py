@@ -108,6 +108,27 @@ def to_markdown(report: dict) -> str:
     if banner["detected"]:
         out += ["", "## Consent banner evidence", ""]
         out += [f"- {e}" for e in banner["evidence"]]
+    rej = report.get("after_reject")
+    if rej:
+        out += ["", "## After clicking Reject", ""]
+        if rej["verdict"] == "no_button":
+            out.append("No reject button was found on the start page, so nothing was clicked.")
+        elif rej["verdict"] == "error":
+            out.append(f"The reject check failed: {rej['error']}")
+        else:
+            c = rej["clicked"]
+            out.append(f"Clicked \"{c['text']}\" ({c['how']}), then reloaded the page.")
+            out.append("")
+            if rej["verdict"] == "ok":
+                out.append("OK: no tracking request and no new tracking cookie after reject.")
+            else:
+                out.append("FAIL: tracking continues after the visitor said no.")
+                if rej["tracking_requests"]:
+                    out += [""] + _table(["Host", "Tracker", "Category", "Requests"], [
+                        [e["host"], e["tracker"], e["category"], e["requests"]] for e in rej["tracking_requests"]])
+                if rej["new_tracking_cookies"]:
+                    out += [""] + _table(["Cookie", "Domain", "Tracker"], [
+                        [e["name"], e["domain"], e["tracker"]] for e in rej["new_tracking_cookies"]])
     out += ["", "## Notes (not legal advice)", ""]
     out += [f"- {n}" for n in report["notes"]]
     out.append("")
@@ -122,4 +143,5 @@ def one_line_summary(report: dict) -> str:
         f"{s['cookies']} cookie(s), {s['storage_keys']} storage key(s), "
         f"{s['third_party_hosts']} third-party host(s); banner: "
         + (banner["cmp"] if banner["detected"] else "none")
+        + (f"; after reject: {report['after_reject']['verdict']}" if report.get("after_reject") else "")
     )

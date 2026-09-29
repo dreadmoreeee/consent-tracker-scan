@@ -2,12 +2,13 @@
 
 Each page is loaded in a fresh browser context (empty cookies and storage),
 so every page is seen the way a first-time visitor landing on it sees it.
-Nothing on the page is clicked, typed into or scrolled.
+Nothing on the page is clicked, typed into or scrolled, except in ``reject()``,
+which clicks only a button whose text clearly means "reject" (see cmp.py).
 """
 
 from __future__ import annotations
 
-from .cmp import ALL_SELECTORS, GENERIC_BANNER_JS
+from .cmp import ALL_SELECTORS, FIND_REJECT_JS, GENERIC_BANNER_JS, REJECT_SELECTORS
 
 
 class BrowserUnavailable(RuntimeError):
@@ -138,6 +139,45 @@ class BrowserSession:
         finally:
             context.close()
         return obs
+
+    def reject(self, url: str) -> dict:
+        """Load ``url``, click the banner's reject button, reload, and observe again.
+
+        Returns ``{"clicked": {...} | None, "error": str | None, "requests": [...],
+        "cookies_before": [...], "cookies_after": [...]}``. ``requests`` are only
+        those made after the reload, i.e. once the visitor has said no.
+        """
+        from playwright.sync_api import Error as PlaywrightError
+
+        out: dict = {"clicked": None, "error": None, "requests": [], "cookies_before": [], "cookies_after": []}
+        log: list[dict] = []
+        context = self._browser.new_context(locale=self.locale, service_workers="block")
+        try:
+            context.on("request", lambda r: log.append(
+                {"url": r.url, "resource_type": r.resource_type, "method": r.method}))
+            page = context.new_page()
+            try:
+                page.goto(url, wait_until="load", timeout=self.timeout_ms)
+                page.wait_for_timeout(self.wait_ms)
+                out["cookies_before"] = [{"name": c.get("name", ""), "domain": c.get("domain", "")}
+                                         for c in context.cookies()]
+                found = page.evaluate(FIND_REJECT_JS, list(REJECT_SELECTORS))
+                if not found or not found.get("found"):
+                    return out
+                page.click("[data-cts-reject='1']", timeout=self.timeout_ms)
+                out["clicked"] = {"how": found.get("how", ""), "text": found.get("text", "")}
+                page.wait_for_timeout(1500)
+                log.clear()
+                page.reload(wait_until="load", timeout=self.timeout_ms)
+                page.wait_for_timeout(self.wait_ms)
+                out["requests"] = list(log)
+                out["cookies_after"] = [{"name": c.get("name", ""), "domain": c.get("domain", "")}
+                                        for c in context.cookies()]
+            except PlaywrightError as err:
+                out["error"] = str(err).strip().splitlines()[0]
+        finally:
+            context.close()
+        return out
 
     @staticmethod
     def _safe(fn, default):

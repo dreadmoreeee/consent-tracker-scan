@@ -6,7 +6,7 @@ See what a website does **before the visitor says yes**: the cookies, the web st
 python -m consent_tracker_scan https://your-site.ca/ --pages 5 --md report.md --json report.json
 ```
 
-The site is loaded in headless Chromium (Playwright) as a first-time visitor with an empty profile. The consent banner is **never clicked**. The report lists:
+The site is loaded in headless Chromium (Playwright) as a first-time visitor with an empty profile. The consent banner is **never clicked** unless you ask for `--reject` (see below). The report lists:
 
 - **every cookie**, first-party and third-party, with domain, name, expiry and flags (Secure, HttpOnly, SameSite). Values are never stored, only their length;
 - **every localStorage and sessionStorage key**, including keys in iframes;
@@ -31,20 +31,32 @@ Python 3.10+. The only dependency is Playwright; everything else uses the standa
 ```
 python -m consent_tracker_scan URL [--pages N] [--delay SECONDS] [--timeout SECONDS]
                                [--wait-ms MS] [--json out.json] [--md out.md]
-                               [--extra-trackers FILE] [--quiet]
+                               [--extra-trackers FILE] [--reject] [--quiet]
 ```
 
 - `--pages N` crawls up to N same-origin pages (1-20, default 1), breadth-first from the start URL. The scanner reads robots.txt the way Google does (RFC 9309: the most specific rule wins, with `*` and `$` wildcards) and never loads a disallowed URL. Pages are fetched one at a time.
 - `--delay` sets the pause between pages (default 1 s). If robots.txt sets a larger `Crawl-delay`, that value is used instead.
 - `--timeout` is the page load timeout (default 30 s). `--wait-ms` is the extra time to wait after the load event, so late tags can fire (default 3000).
 - `--json` and `--md` write the reports. Without either option, the Markdown report goes to stdout.
+- `--reject` checks that "no" means no. After the normal scan, the start page is loaded once more in a fresh context. The tool finds the banner's reject button: first the known CMP buttons (OneTrust, Cookiebot, CookieYes, Complianz, Osano, Didomi, Usercentrics, Quantcast, TrustArc), then a visible button whose whole text is an unambiguous refusal ("Reject all", "Decline", "Only necessary", "Tout refuser", "Rechazar"...). It clicks that one button, reloads, and records what fires. The verdict is `ok` (no tracking request and no new tracking cookie), `fail` (tracking continues; exit code 1), or `no_button`. It never clicks Accept, Settings or anything else; if no clear reject button exists, nothing is clicked.
 - `--extra-trackers` adds your own entries, in the same format as `consent_tracker_scan/data/trackers.json`.
 
-**Exit codes:** `0` means no high-severity findings. `1` means at least one high-severity finding. `2` means a usage error, or nothing could be scanned: bad URL, browser missing, start page blocked by robots.txt or unreachable. This makes it usable as a CI check on your own site.
+**Exit codes:** `0` means no high-severity findings. `1` means at least one high-severity finding, or, with `--reject`, trackers still firing after reject. `2` means a usage error, or nothing could be scanned: bad URL, browser missing, start page blocked by robots.txt or unreachable. This makes it usable as a CI check on your own site.
 
 From Python: `from consent_tracker_scan import scan_site; report = scan_site("https://your-site.ca/", pages=3)`.
 
 Each page is loaded in a **fresh browser context**, so every page is seen the way a first-time visitor landing on it would see it.
+
+`--reject` on the author's own sites, which load no tracker and therefore show no banner:
+
+```
+$ python -m consent_tracker_scan https://demarkstudio.ca/en/ --reject --quiet --md r.md
+1 page(s): 0 high, 0 medium, 1 low; 1 cookie(s), 0 storage key(s), 1 third-party host(s); banner: none; after reject: no_button
+$ python -m consent_tracker_scan https://demo.demarkstudio.ca/riverside-pub/site --reject --quiet --md r.md
+1 page(s): 0 high, 0 medium, 1 low; 0 cookie(s), 0 storage key(s), 1 third-party host(s); banner: none; after reject: no_button
+```
+
+That is the right outcome: the only third party is cookieless Cloudflare Web Analytics (low), so there is nothing to refuse and nothing was clicked. The `ok` and `fail` verdicts are proven by the local test sites.
 
 ## Measured result
 
@@ -97,10 +109,10 @@ The tracker asked for a 2-year cookie, and the report shows the 400-day expiry C
 
 ```
 $ python -m pytest -q -p no:cacheprovider --import-mode=importlib consent-tracker-scan
-110 passed in 28.56s
+118 passed in 54.62s
 ```
 
-The tests use no internet. Local `http.server` fixtures on random ports serve a first-party site, which sets cookies by header and by JavaScript and writes storage. A fake tracker is served from a second origin (`localhost` vs `127.0.0.1`). Other fixtures serve OneTrust-like, Cookiebot-like and generic banners with click traps that prove nothing is clicked, robots.txt rules and link farms for `--pages`. Browser tests skip with the reason if Chromium cannot start.
+The tests use no internet. Local `http.server` fixtures on random ports serve a first-party site, which sets cookies by header and by JavaScript and writes storage. A fake tracker is served from a second origin (`localhost` vs `127.0.0.1`). Other fixtures serve OneTrust-like, Cookiebot-like and generic banners with click traps that prove nothing is clicked, sites that honour or ignore a reject click (and one with only an Accept button, which must never be pressed), robots.txt rules and link farms for `--pages`. Browser tests skip with the reason if Chromium cannot start.
 
 ## Tracker list
 
